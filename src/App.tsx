@@ -8,6 +8,7 @@ import { WatchlistPage } from "@/features/dashboard/WatchlistPage";
 import { useUIStore } from "@/store/ui.store";
 import { useState } from "react";
 import { LoginPage } from "./features/auth/Login";
+import { DashboardHeader } from "./shared/components/DashboardHeader";
 
 // 1. Create a sub-component for the Authenticated View
 const AuthenticatedApp = () => {
@@ -32,6 +33,7 @@ const AuthenticatedApp = () => {
       height: "100vh", overflow: "hidden",
       background: "var(--bg-void)",
     }}>
+      <DashboardHeader/>
       <Header />
       <main style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
         {renderTab()}
