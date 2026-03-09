@@ -1,0 +1,20 @@
+# --- Global/IDE Specific ---
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.log
+
+# --- Common Dependencies (matches in both project folders) ---
+node_modules/
+vendor/
+packages/
+.env
+.env.local
+
+# --- Common Build Outputs ---
+dist/
+build/
+bin/
+obj/
+out/
