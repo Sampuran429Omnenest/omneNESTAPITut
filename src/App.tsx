@@ -9,13 +9,13 @@ import { useUIStore } from "@/store/ui.store";
 import { useState } from "react";
 import { LoginPage } from "./features/auth/Login";
 
-export default function App() {
-  const [isAuthenticated,setIsAuthenticated]=useState<boolean>(
-    !!localStorage.getItem('bearer_token')
-  )
-  const activeTab = useUIStore((s) => s.activeTab);
-  // Starts WebSocket connection — runs once on mount
+// 1. Create a sub-component for the Authenticated View
+const AuthenticatedApp = () => {
+  // This hook now only runs once this component is mounted (after login)
   useWebSocket();
+
+  const activeTab = useUIStore((s) => s.activeTab);
+
   const renderTab = () => {
     switch (activeTab) {
       case "dashboard":  return <DashboardPage />;
@@ -25,9 +25,7 @@ export default function App() {
       default:           return <DashboardPage />;
     }
   };
-  if(!isAuthenticated){
-    return <LoginPage onLoginSuccess={()=>setIsAuthenticated(true)}/>
-  }
+
   return (
     <div style={{
       display: "flex", flexDirection: "column",
@@ -35,13 +33,9 @@ export default function App() {
       background: "var(--bg-void)",
     }}>
       <Header />
-
-      {/* Tab content */}
       <main style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
         {renderTab()}
       </main>
-
-      {/* Footer */}
       <footer style={{
         padding: "4px 20px",
         borderTop: "1px solid var(--border)",
@@ -52,10 +46,24 @@ export default function App() {
         flexShrink: 0,
       }}>
         <span>ws://localhost:8080</span>
-        <span>omneNEST · Simulated data — for learning only</span>
+        <span>omneNEST · Simulated data</span>
       </footer>
-
       <NotificationStack />
     </div>
   );
+};
+
+// 2. Main App Component
+export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
+    !!localStorage.getItem('bearer_token')
+  );
+
+  // If not authenticated, show ONLY the login page
+  if (!isAuthenticated) {
+    return <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
+
+  // If authenticated, show the AuthenticatedApp (which triggers WebSocket)
+  return <AuthenticatedApp />;
 }
