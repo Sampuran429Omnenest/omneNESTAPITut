@@ -1,4 +1,5 @@
 import { getDashboardConfig } from "@/services/api/dashboard";
+import { getMarketStatus } from "@/services/api/market";
 import { memo, useEffect, useState } from "react";
 
 interface DashboardFeature{
@@ -7,14 +8,22 @@ interface DashboardFeature{
 
 export const DashboardHeader=memo(function DashboardHeader(){
     const [features,setFeatures]=useState<DashboardFeature[]>([]);
+    const [isMarketOpen,setIsMarketOpen]=useState<boolean>(false);
     const [loading,setLoading]=useState<boolean>(true);
     useEffect(()=>{
         const fetchHeaderConfig=async()=>{
             try {
-                const response=await getDashboardConfig();
-                if(response?.dashboard?.features){
-                    setFeatures(response.dashboard.features);
+                //run for both dashboard config and market status since market status do not require a seperate component
+                const [configRes,marketRes]=await Promise.all([
+                    getDashboardConfig(),
+                    getMarketStatus()
+                ]);
+                if(configRes?.dashboard?.features){
+                    setFeatures(configRes.dashboard.features);
                 }
+                const firstStatus=marketRes?.market_status?.[0]?.marketStatus || "";
+                console.log(firstStatus);
+                setIsMarketOpen(firstStatus.toLowerCase().includes("open"));
             } catch (error) {
                 console.error("Dashboard config fetching error",error);
             } finally{
@@ -25,6 +34,7 @@ export const DashboardHeader=memo(function DashboardHeader(){
     },[])
     return(
         <header style={containerStyle}>
+            <div style={logoStyle}>omneNEST</div>
             <nav style={navStyle}>
                 {loading ? (
                     <span style={loadingStyle}>FETCHING_NAV...</span>
@@ -36,7 +46,15 @@ export const DashboardHeader=memo(function DashboardHeader(){
                     ))
                 )}
             </nav>
-            <div style={statusStyle}>SYSTEM_READY</div>
+            <div style={statusStyle}>
+                <span style={{
+                    color:isMarketOpen ? "#4caf50" : "#f44336",
+                    marginRight:"4px"
+                }}>
+                    ●
+                </span>
+                MARKET_{isMarketOpen ? "OPEN" : "CLOSED"}
+            </div>
         </header>
     );
 });
