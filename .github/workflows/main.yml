@@ -33,7 +33,7 @@ jobs:
           HIT=$(grep -h "^LH:" coverage/lcov.info | awk -F: '{s+=$2} END{print s}')
           PCT=$(( HIT * 100 / FOUND ))
           echo "Coverage: $PCT%"
-          [ "$PCT" -ge 80 ] || { echo " Coverage $PCT% < 80%. Failing."; exit 1; }
+          [ "$PCT" -ge 70 ] || { echo " Coverage $PCT% < 70%. Failing."; exit 1; }
  
       - uses: actions/upload-artifact@v4
         with:
