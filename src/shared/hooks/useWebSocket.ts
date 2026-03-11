@@ -1,6 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useMarketStore } from "@/store";
-import { parseMessage } from "@/services/websocket/messageParser";
+import { 
+  parseRawFrame, 
+  isPong, 
+  extractTicks, 
+  normaliseTick 
+} from "@/services/websocket/messageParser";
 import {
   getReconnectDelay,
   PING_INTERVAL_MS,
@@ -47,21 +52,50 @@ export function useWebSocket() {
     };
 
     ws.onmessage = (event: MessageEvent) => {
-      const msg = parseMessage(event.data as string);
-      if (!msg) return;
+      const frame = parseRawFrame(event.data as string);
+      if (!frame) return;
 
-      if (msg.type === "PONG") {
-        if (pongTimer.current) { clearTimeout(pongTimer.current); pongTimer.current = null; }
+      // 1. Handle Heartbeat using isPong helper
+      if (isPong(frame)) {
+        if (pongTimer.current) { 
+          clearTimeout(pongTimer.current); 
+          pongTimer.current = null; 
+        }
         addEvent("PONG received", "ping");
         return;
       }
-      if (msg.type === "STOCK_UPDATE") {
-        setStock(msg.stock);
-        addEvent(`${msg.stock.symbol} → ₹${msg.stock.price.toFixed(2)}`, "price");
+
+      // 2. Handle Stock Updates using extractTicks helper
+      const ticks = extractTicks(frame);
+      if (ticks.length > 0) {
+        ticks.forEach((rawTick) => {
+          const cleanTick = normaliseTick(rawTick);
+          
+          // Map to your store's "Stock" type
+        setStock({
+          symbol: cleanTick.token,
+          name: cleanTick.token, 
+          price: cleanTick.ltp,
+          change: cleanTick.change,
+          changePercent: cleanTick.changePercent,
+          prevClose: cleanTick.close,
+          // Add these to fix the TS2345 error:
+          open: cleanTick.open,
+          high: cleanTick.high,
+          low: cleanTick.low,
+          volume: cleanTick.volume,
+          sector: "N/A" 
+        });
+
+          addEvent(`${cleanTick.token} → ₹${cleanTick.ltp.toFixed(2)}`, "price");
+        });
         return;
       }
-      if (msg.type === "ORDER_BOOK") {
-        setOrderBook({ symbol: msg.symbol, bids: msg.bids, asks: msg.asks });
+
+      // 3. Handle Order Book
+      const f = frame as Record<string, any>;
+      if (f.type === "ORDER_BOOK") {
+        setOrderBook({ symbol: f.symbol, bids: f.bids, asks: f.asks });
         return;
       }
     };
@@ -88,10 +122,8 @@ export function useWebSocket() {
         wsRef.current.close();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Expose send for components that need to subscribe to order books
   function send(data: object) {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(data));

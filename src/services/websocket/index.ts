@@ -4,7 +4,7 @@
 // Import from here – never reach into sub-modules directly.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { WsManager, wsManager } from "./wsManager";
+import { WsManager, wsManager } from "./WsManager";
 
  
 export { wsManager, WsManager } ;

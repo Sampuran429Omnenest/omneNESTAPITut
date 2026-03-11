@@ -21,7 +21,7 @@ function eventLabel(event: WsLifecycleEvent): { label: string; color: string } {
     case "PONG_RECEIVED":       return { label: "← PONG",               color: "var(--gold)" };
     case "PONG_TIMEOUT":        return { label: "⏱ PONG TIMEOUT",       color: "var(--red)" };
     case "SUBSCRIBED":          return { label: `✓ SUBSCRIBED (${event.tokens.length} exchange(s))`, color: "var(--blue)" };
-    default:                    return { label: event.kind,             color: "var(--text-muted)" };
+    default:                    return { label: "",             color: "var(--text-muted)" };
   }
 }
  
