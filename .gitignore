@@ -18,3 +18,5 @@ build/
 bin/
 obj/
 out/
+
+src/services/api/config.ts
